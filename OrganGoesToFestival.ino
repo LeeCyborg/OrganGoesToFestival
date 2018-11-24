@@ -105,7 +105,7 @@ void selectPattern() {
       meteorRain(20, 64, true, speedVal);
       break;
     case 2:
-      SnowSparkle( speedVal, random(100));
+      SnowSparkle( speedVal);
       break;
     case 3:
       Fire(speedVal, 120, 15);
@@ -172,7 +172,7 @@ void setPixelHeatColor (int Pixel, byte temperature) {
     setPixel(Pixel, heatramp, green, 0);
   }
 }
-void SnowSparkle(int SparkleDelay, int SpeedDelay) {
+void SnowSparkle( int SpeedDelay) {
   setAll(red, green, blue);
 
   int Pixel = random(NUM_LEDS);
