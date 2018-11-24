@@ -22,103 +22,150 @@
 int pinAssignments[18] = {2, 3, 4, 5, 6, 7, 22, 23, 24, 25, 26, 27};
 #define speedMod 0
 int currPat = 0;
-int red = 0;
+int red = 144;
 int blue = 0;
 int green = 0;
-int speedVal = 0;
-int rate = 5;
+int speedVal = 10;
+int rate = 10;
+int currPattern = 2;
+
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+
 void setup() {
   Serial.begin(9600);
-  for (int i = 0; i < 5; i++) { // uno doesn't have all the pins
+  
+  for (int i = 0; i < 18; i++) { // uno doesn't have all the pins
     pinMode(pinAssignments[i], INPUT_PULLUP);
   }
+  
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+  
+  Serial.begin(9600);
 }
 
 void loop() {
   //  red = random(255);
   //  blue = random(100);
   //  green = 0;
-  //  speedVal = random(0, 60);
+  //  speedVal = random(0, 60);    
+
   selectPattern();
 
+  readKeys();
 }
 
 void readKeys() {
-  if (digitalRead(pinAssignments[4] == LOW)) {
+  if (digitalRead(pinAssignments[4]) == LOW) {
     if (checkIt(speedVal)) {
       speedVal += rate;
     }
   }
-  if (digitalRead(pinAssignments[5] == LOW)) {
-    if (speedVal > 0) {
+  
+  if (digitalRead(pinAssignments[5]) == LOW) {
+    if (speedVal - rate > 0) {
       speedVal -= rate;
     }
   }
-  if (digitalRead(pinAssignments[6] == LOW)) {
+  
+  if (digitalRead(pinAssignments[6]) == LOW) {
     if (checkIt(red)) {
       red += rate;
     }
   }
-  if (digitalRead(pinAssignments[7] == LOW)) {
-    if (red > 0) {
+  
+  if (digitalRead(pinAssignments[7]) == LOW) {
+    if (red - rate > 0) {
       red -= rate;
     }
   }
-  if (digitalRead(pinAssignments[8] == LOW)) {
+  
+  if (digitalRead(pinAssignments[8]) == LOW) {
     if (checkIt(green)) {
       green += rate;
     }
   }
-  if (digitalRead(pinAssignments[9] == LOW)) {
-    if (green > 0) {
+  if (digitalRead(pinAssignments[9]) == LOW) {
+    if (green - rate > 0) {
       green -= rate;
     }
   }
-  if (digitalRead(pinAssignments[10] == LOW)) {
-    if (checkIt(green)) {
-      green += rate;
+  
+  if (digitalRead(pinAssignments[10]) == LOW) {
+    if (checkIt(blue)) {
+      blue += rate;
     }
   }
-  if (digitalRead(pinAssignments[11] == LOW)) {
-    if (green > 0) {
-      green -= rate;
+  
+  if (digitalRead(pinAssignments[11]) == LOW) {
+    if (blue - rate > 0) {
+      blue -= rate;
     }
   }
+/*
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
+
+  Serial.print("SpeedVal: ");
+  Serial.println(speedVal);
+
+  Serial.print("Red: ");
+  Serial.println(red);
+
+  Serial.print("Green: ");
+  Serial.println(green);
+  
+  Serial.print("Blue: ");
+  Serial.println(blue);
+  */
 }
+
 boolean checkIt(int which) {
-  if (which > 255) {
+  if (which + rate > 255) {
     return false;
-  } else {
-    return true;
   }
+    return true;
 }
+
 void selectPattern() {
   switch (readPlungers()) {
     case 0:
       NewKITT(8, speedVal, speedVal);
+      currPattern = 0;
       break;
     case 1:
       meteorRain(20, 64, true, speedVal);
+      currPattern = 1;
       break;
     case 2:
       SnowSparkle( speedVal);
+      currPattern = 2;
       break;
     case 3:
       Fire(speedVal, 120, 15);
+      currPattern = 3;
       break;
   }
 }
+
 int readPlungers() {
   for (int i = 0; i < 4; i++) {
-    if (!analogRead(pinAssignments[i])) {
+    if (!digitalRead(pinAssignments[i])) {
+      //Serial.println(i);
       return (i);
     }
   }
+  return (currPattern);
 }
+
 void Fire(int Cooling, int Sparking, int SpeedDelay) {
   static byte heat[NUM_LEDS];
   int cooldown;
@@ -152,7 +199,7 @@ void Fire(int Cooling, int Sparking, int SpeedDelay) {
   }
 
   showStrip();
-  delay(SpeedDelay);
+  //delay(SpeedDelay);
 }
 
 void setPixelHeatColor (int Pixel, byte temperature) {
@@ -172,22 +219,28 @@ void setPixelHeatColor (int Pixel, byte temperature) {
     setPixel(Pixel, heatramp, green, 0);
   }
 }
+
+
 void SnowSparkle( int SpeedDelay) {
   setAll(red, green, blue);
 
   int Pixel = random(NUM_LEDS);
   setPixel(Pixel, 0xff, 0xff, 0xff);
+  setPixel(Pixel+1, 0xff, 0xff, 0xff);
+  setPixel(Pixel+2, 0xff, 0xff, 0xff);
   showStrip();
-  delay(SpeedDelay);
+  //delay(SpeedDelay);
   setPixel(Pixel, red, green, blue);
+  setPixel(Pixel+1, 0xff, 0xff, 0xff);
+  setPixel(Pixel+2, 0xff, 0xff, 0xff);
   showStrip();
-  delay(SpeedDelay);
+  delay(100);
 }
 void meteorRain(byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
   setAll(0, 0, 0);
 
   for (int i = 0; i < NUM_LEDS + NUM_LEDS; i++) {
-
+    readKeys();
 
     // fade brightness all LEDs one step
     for (int j = 0; j < NUM_LEDS; j++) {
@@ -204,7 +257,7 @@ void meteorRain(byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDeca
     }
 
     showStrip();
-    delay(SpeedDelay);
+    //delay(SpeedDelay);
   }
 }
 
@@ -213,7 +266,7 @@ void fadeToBlack(int ledNo, byte fadeValue) {
   // NeoPixel
   uint32_t oldColor;
   uint8_t r, g, b;
-  int value;
+  //int value;
 
   oldColor = strip.getPixelColor(ledNo);
   r = (oldColor & 0x00ff0000UL) >> 16;
@@ -241,6 +294,7 @@ void NewKITT(int EyeSize, int SpeedDelay, int ReturnDelay) {
 
 void CenterToOutside(int EyeSize, int SpeedDelay, int ReturnDelay) {
   for (int i = ((NUM_LEDS - EyeSize) / 2); i >= 0; i--) {
+    readKeys();
     setAll(0, 0, 0);
 
     setPixel(i, red / 10, green / 10, blue / 10);
@@ -256,13 +310,14 @@ void CenterToOutside(int EyeSize, int SpeedDelay, int ReturnDelay) {
     setPixel(NUM_LEDS - i - EyeSize - 1, red / 10, green / 10, blue / 10);
 
     showStrip();
-    delay(SpeedDelay);
+    delay(50);
   }
   delay(ReturnDelay);
 }
 
 void OutsideToCenter(int EyeSize, int SpeedDelay, int ReturnDelay) {
   for (int i = 0; i <= ((NUM_LEDS - EyeSize) / 2); i++) {
+    readKeys();
     setAll(0, 0, 0);
 
     setPixel(i, red / 10, green / 10, blue / 10);
@@ -278,8 +333,9 @@ void OutsideToCenter(int EyeSize, int SpeedDelay, int ReturnDelay) {
     setPixel(NUM_LEDS - i - EyeSize - 1, red / 10, green / 10, blue / 10);
 
     showStrip();
-    delay(SpeedDelay);
+    delay(50);
   }
+  
   delay(ReturnDelay);
 }
 
