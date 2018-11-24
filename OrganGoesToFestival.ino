@@ -89,11 +89,11 @@ void readKeys() {
     }
   }
 }
-checkIt(int which) {
+boolean checkIt(int which) {
   if (which > 255) {
     return false;
   } else {
-    return true
+    return true;
   }
 }
 void selectPattern() {
